@@ -1,0 +1,44 @@
+
+<%- include('partials/header') %>
+<div class="card">
+  <div class="card-header bg-primary text-white">
+    <h2 class="h3 mb-0">🏆 Leaderboard</h2>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead class="table-light">
+          <tr>
+            <th>Rank</th>
+            <th>User</th>
+            <th>Auctions Won</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% leaderboard.forEach((user, index) => { %>
+            <tr>
+              <td>
+                <% if (index === 0) { %>
+                  <span class="badge bg-warning text-dark">🥇 1</span>
+                <% } else if (index === 1) { %>
+                  <span class="badge bg-secondary">🥈 2</span>
+                <% } else if (index === 2) { %>
+                  <span class="badge bg-danger">🥉 3</span>
+                <% } else { %>
+                  <span class="badge bg-primary"><%= index + 1 %></span>
+                <% } %>
+              </td>
+              <td><%= user.name %></td>
+              <td><%= user.wins %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<%- include('partials/footer') %>
+<!-- <script>
+  const leaderboardData = <%- JSON.stringify(leaderboard) %>;
+  console.log("Leaderboard Data:", leaderboardData);
+</script> -->

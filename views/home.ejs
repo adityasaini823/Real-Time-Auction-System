@@ -1,0 +1,66 @@
+<%- include('partials/header') %>
+<!-- <button type="button" class="btn btn-primary" id="liveToastBtn">Show live toast</button> -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+  <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header">
+      <strong class="me-auto">Auction Update</strong>
+      <small>Just now</small>
+      <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body">
+    </div>
+  </div>
+</div>
+<h1 class="mb-4">Available Auctions</h1>
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+  <% auctions.forEach(function(auction) { %>
+    <div class="col" data-id="<%= auction.id %>">
+      <div class="card h-100">
+        <div class="card-header <%= auction.status === 'ongoing' ? 'bg-success' : 'bg-secondary' %> text-white">
+          <span class="badge <%= auction.status === 'ongoing' ? 'bg-light text-dark' : 'bg-light text-secondary' %> float-end">
+            <%= auction.status === 'ongoing' ? 'Ongoing' : 'Closed' %>
+          </span>
+          <h5 class="card-title mb-0 text-truncate"><%= auction.title %></h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Current Bid:</span>
+            <span class="fw-bold">$<%= auction.current_bid || auction.start_price %></span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span class="text-muted">Ends at:</span>
+            <span><%= new Date(auction.end_time).toLocaleString() %></span>
+          </div>
+        </div>
+        <!-- <div id="toastContainer"></div> -->
+        <div class="card-footer">
+          <a href="/auction/<%= auction.id %>" class="btn btn-primary w-100">View Details</a>
+        </div>
+      </div>
+    </div>
+  <% }); %>
+</div>
+<%- include('partials/footer') %>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+  const socket=io();
+  socket.on('auctionClosed',(data)=>{
+    console.log("Received auctionClosed event:", data); // Debugging
+    // alert(` ${data.auctionTitle} auction is Closed. Please check the results`)
+    const auctionDiv = document.querySelector(`.col[data-id="${data.auctionId}"]`);
+    if (auctionDiv) {
+      const banner = auctionDiv.querySelector('.card-header');
+      banner.classList.replace('bg-success', 'bg-secondary');
+      const auctionStatus = banner.querySelector(".badge");
+      if (auctionStatus) {
+        auctionStatus.textContent = "closed";  // Correct way to update text
+      }
+    }
+    var toastEl = document.getElementById('liveToast');
+    var toast = new bootstrap.Toast(toastEl);
+    var item = document.querySelector('.toast-body');
+    item.innerText =` 🚨 Auction closed:${data.auctionTitle}`
+    toast.show();
+  });
+});
+</script>

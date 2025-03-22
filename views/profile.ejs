@@ -1,0 +1,64 @@
+<%- include('partials/header') %>
+<div class="row">
+  <div class="col-md-4">
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <h2 class="h4 mb-0">Profile Information</h2>
+      </div>
+      <div class="card-body">
+        <div class="mb-3 text-center">
+          <div class="rounded-circle bg-light d-inline-flex justify-content-center align-items-center" style="width: 100px; height: 100px">
+            <span class="display-4"><%= user.name.charAt(0).toUpperCase() %></span>
+          </div>
+        </div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item d-flex justify-content-between">
+            <span>Name:</span>
+            <span class="fw-bold"><%= user.name %></span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span>Email:</span>
+            <span class="fw-bold"><%= user.email %></span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h2 class="h4 mb-0">Your Bidding History</h2>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Auction</th>
+                <th>Bid Amount</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (bids.length === 0) { %>
+                <tr>
+                  <td colspan="3" class="text-center py-3">You haven't placed any bids yet.</td>
+                </tr>
+              <% } else { %>
+                <% bids.forEach(function(bid) { %>
+                  <tr>
+                    <td><%= bid.auction_title %></td>
+                    <td>$<%= bid.bid_amount %></td>
+                    <td><%= new Date(bid.bid_time).toLocaleString() %></td>
+                  </tr>
+                <% }); %>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('partials/footer') %>

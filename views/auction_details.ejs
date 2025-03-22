@@ -1,0 +1,84 @@
+<%- include('partials/header') %>
+<div class="card mb-4">
+  <div class="card-header bg-primary text-white">
+    <h1 class="mb-0"><%= auction.title %></h1>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-8">
+        <p class="lead"><%= auction.description %></p>
+      </div>
+      <div class="col-md-4">
+        <div class="card bg-light">
+          <div class="card-body">
+            <p><strong>Starting Price:</strong> $<%= auction.start_price %></p>
+            <p><strong>Current Bid:</strong> $<%= auction.current_bid || auction.start_price %></p>
+            <p><strong>Ends at:</strong> <%= new Date(auction.end_time).toLocaleString() %></p>
+            <p><strong>Status:</strong> <span class="badge <%= auction.status === 'ongoing' ? 'bg-success' : 'bg-secondary' %>"><%= auction.status %></span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <% if (auction.status === 'ongoing') { %>
+      <div class="card mt-4">
+        <div class="card-header bg-success text-white">
+          <h2 class="h5 mb-0">Place a Bid</h2>
+        </div>
+        <div class="card-body">
+          <form action="/auction/<%= auction.id %>/bid" method="POST" class="row g-3 align-items-end">
+            <div class="col-md-8">
+              <label for="bidAmount" class="form-label">Your Bid ($):</label>
+              <input type="number" id="bidAmount" name="bidAmount" step="0.01" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+              <button type="submit" class="btn btn-primary w-100">Place Bid</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="alert alert-warning mt-4">
+        <p class="mb-0">Bidding is closed for this auction.</p>
+      </div>
+    <% } %>
+
+    <div class="card mt-4">
+      <div class="card-header bg-info text-white">
+        <h2 class="h5 mb-0">Bidding History</h2>
+      </div>
+      <div class="card-body">
+        <ul class="list-group bid-history">
+          <% bids.forEach(function(bid) { %>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>$<%= bid.bid_amount %> by <%= bid.name %></span>
+              <span class="badge bg-primary rounded-pill"><%= new Date(bid.bid_time).toLocaleString() %></span>
+            </li>
+          <% }); %>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('partials/footer') %>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  socket.on('bidUpdate', (data) => {
+    const bidHistory = document.getElementsByClassName("bid-history")[0];
+    const newBid = document.createElement("li");
+    newBid.className = "list-group-item d-flex justify-content-between align-items-center";
+    
+    const bidText = document.createElement("span");
+    bidText.textContent = `$${data.bidAmount} by ${data.user}`;
+    
+    const bidTime = document.createElement("span");
+    bidTime.className = "badge bg-primary rounded-pill";
+    bidTime.textContent = new Date().toLocaleString();
+    
+    newBid.appendChild(bidText);
+    newBid.appendChild(bidTime);
+    bidHistory.prepend(newBid);
+  })
+</script>
