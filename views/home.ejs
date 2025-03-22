@@ -45,7 +45,7 @@
   document.addEventListener('DOMContentLoaded', function() {
   const socket=io();
   socket.on('auctionClosed',(data)=>{
-    console.log("Received auctionClosed event:", data); // Debugging
+    console.log("Received auctionClosed event:", data); 
     // alert(` ${data.auctionTitle} auction is Closed. Please check the results`)
     const auctionDiv = document.querySelector(`.col[data-id="${data.auctionId}"]`);
     if (auctionDiv) {
@@ -53,7 +53,7 @@
       banner.classList.replace('bg-success', 'bg-secondary');
       const auctionStatus = banner.querySelector(".badge");
       if (auctionStatus) {
-        auctionStatus.textContent = "closed";  // Correct way to update text
+        auctionStatus.textContent = "closed"; 
       }
     }
     var toastEl = document.getElementById('liveToast');

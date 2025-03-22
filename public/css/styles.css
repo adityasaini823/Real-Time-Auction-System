@@ -1,0 +1,16 @@
+.position-relative {
+    position: relative;
+  }
+  
+  .invalid-feedback {
+    position: absolute;
+    bottom: -20px; /* Adjust based on spacing */
+    left: 0;
+    width: 100%;
+    display: none; /* Initially hidden */
+  }
+  
+  .is-invalid + .invalid-feedback {
+    display: block;
+  }
+  

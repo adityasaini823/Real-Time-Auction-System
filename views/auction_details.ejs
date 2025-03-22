@@ -14,7 +14,11 @@
             <p><strong>Starting Price:</strong> $<%= auction.start_price %></p>
             <p><strong>Current Bid:</strong> $<%= auction.current_bid || auction.start_price %></p>
             <p><strong>Ends at:</strong> <%= new Date(auction.end_time).toLocaleString() %></p>
-            <p><strong>Status:</strong> <span class="badge <%= auction.status === 'ongoing' ? 'bg-success' : 'bg-secondary' %>"><%= auction.status %></span></p>
+            <p><strong>Status:</strong> 
+              <span class="badge <%= auction.status === 'ongoing' ? 'bg-success' : 'bg-secondary' %>">
+                <%= auction.status %>
+              </span>
+            </p>
           </div>
         </div>
       </div>
@@ -26,10 +30,20 @@
           <h2 class="h5 mb-0">Place a Bid</h2>
         </div>
         <div class="card-body">
-          <form action="/auction/<%= auction.id %>/bid" method="POST" class="row g-3 align-items-end">
+          <form action="/auction/<%= auction.id %>/bid" method="POST" class="row g-3 align-items-end" id="bidForm">
             <div class="col-md-8">
-              <label for="bidAmount" class="form-label">Your Bid ($):</label>
-              <input type="number" id="bidAmount" name="bidAmount" step="0.01" class="form-control" required>
+                <label for="bidAmount" class="form-label">Your Bid ($):</label>
+                <input type="number" 
+                       id="bidAmount" 
+                       name="bidAmount" 
+                       step="1" 
+                       class="form-control" 
+                       min="<%= auction.current_bid + 1 %>" 
+                       value="<%= auction.current_bid + 1 %>"
+                       required>
+                <div class="invalid-feedback">
+                  Your bid must be higher than the current bid of $<%= auction.current_bid %>.
+                </div>
             </div>
             <div class="col-md-4">
               <button type="submit" class="btn btn-primary w-100">Place Bid</button>
@@ -49,12 +63,16 @@
       </div>
       <div class="card-body">
         <ul class="list-group bid-history">
-          <% bids.forEach(function(bid) { %>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <span>$<%= bid.bid_amount %> by <%= bid.name %></span>
-              <span class="badge bg-primary rounded-pill"><%= new Date(bid.bid_time).toLocaleString() %></span>
-            </li>
-          <% }); %>
+          <% if (bids && bids.length > 0) { %>
+            <% bids.forEach(function(bid) { %>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>$<%= bid.bid_amount %> by <%= bid.name %></span>
+                <span class="badge bg-primary rounded-pill"><%= new Date(bid.bid_time).toLocaleString() %></span>
+              </li>
+            <% }); %>
+          <% } else { %>
+            <li class="list-group-item text-center">No bids yet</li>
+          <% } %>
         </ul>
       </div>
     </div>
@@ -62,23 +80,72 @@
 </div>
 <%- include('partials/footer') %>
 
-<script src="/socket.io/socket.io.js"></script>
 <script>
+  // Socket.io bidding updates
   const socket = io();
   socket.on('bidUpdate', (data) => {
-    const bidHistory = document.getElementsByClassName("bid-history")[0];
-    const newBid = document.createElement("li");
-    newBid.className = "list-group-item d-flex justify-content-between align-items-center";
-    
-    const bidText = document.createElement("span");
-    bidText.textContent = `$${data.bidAmount} by ${data.user}`;
-    
-    const bidTime = document.createElement("span");
-    bidTime.className = "badge bg-primary rounded-pill";
-    bidTime.textContent = new Date().toLocaleString();
-    
-    newBid.appendChild(bidText);
-    newBid.appendChild(bidTime);
-    bidHistory.prepend(newBid);
-  })
+    if (data.auctionId === '<%= auction.id %>') {
+      const bidHistory = document.querySelector(".bid-history");
+      
+      // Clear "No bids yet" message if it exists
+      if (bidHistory.querySelector('.text-center')) {
+        bidHistory.innerHTML = '';
+      }
+      
+      const newBid = document.createElement("li");
+      newBid.className = "list-group-item d-flex justify-content-between align-items-center";
+      
+      const bidText = document.createElement("span");
+      bidText.textContent = `$${data.bidAmount} by ${data.user}`;
+      
+      const bidTime = document.createElement("span");
+      bidTime.className = "badge bg-primary rounded-pill";
+      bidTime.textContent = new Date().toLocaleString();
+      
+      newBid.appendChild(bidText);
+      newBid.appendChild(bidTime);
+      bidHistory.prepend(newBid);
+      
+      document.querySelector('p:contains("Current Bid:")').textContent = `Current Bid: $${data.bidAmount}`;
+      
+      const bidInput = document.getElementById('bidAmount');
+      if (bidInput) {
+        bidInput.min = parseFloat(data.bidAmount) + 1;
+        bidInput.value = parseFloat(data.bidAmount) + 1;
+        document.querySelector('.invalid-feedback').textContent = 
+          `Your bid must be higher than the current bid of $${data.bidAmount}.`;
+      }
+    }
+  });
+  document.addEventListener('DOMContentLoaded', function() {
+    const bidForm = document.getElementById('bidForm');
+    if (bidForm) {
+      bidForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        const bidInput = document.getElementById('bidAmount');
+        const bidValue = parseFloat(bidInput.value);
+        const minBid = parseFloat(bidInput.min);
+        
+        if (bidValue < minBid || isNaN(bidValue)) {
+          bidInput.classList.add('is-invalid');
+        } else {
+          bidInput.classList.remove('is-invalid');
+          this.submit();
+        }
+      });
+
+      const bidInput = document.getElementById('bidAmount');
+      bidInput.addEventListener('input', function() {
+        const bidValue = parseFloat(this.value);
+        const minBid = parseFloat(this.min);
+        
+        if (bidValue < minBid || isNaN(bidValue)) {
+          this.classList.add('is-invalid');
+        } else {
+          this.classList.remove('is-invalid');
+        }
+      });
+    }
+  });
 </script>
